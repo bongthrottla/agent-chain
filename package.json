@@ -1,10 +1,10 @@
 {
   "name": "agent-chain",
   "version": "1.0.0",
-  "description": "Policy-gated treasury + token deployment tooling for an autonomous agent on Solana.",
-  "main": "index.js",
+  "description": "Policy-gated treasury + x402 payment rail + ERC-8004 identity for an autonomous agent. Testnet.",
+  "main": "server.mjs",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "python3 -m pytest test_treasury.py -q"
   },
   "keywords": [],
   "author": "",

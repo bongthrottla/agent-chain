@@ -32,7 +32,7 @@ class Policy:
     daily_max: float = 5.0             # rolling 24h ceiling
     hard_ceiling: float = 20.0         # absolute cap, human approval cannot bypass in one tx
     allowlist: list[str] = field(default_factory=list)  # empty = any recipient
-    require_human_above: float = 1.0   # threshold at which a human must approve
+    require_human_above: float = 0.5   # threshold at which a human must approve
 
     def validate(self) -> None:
         assert self.per_tx_max <= self.daily_max <= self.hard_ceiling, \
@@ -138,7 +138,7 @@ class AgentTreasury:
     def approve_pending(self, index: int) -> dict:
         """Human gate: release a queued spend."""
         lines = [l for l in self.pending.read_text().splitlines() if l.strip()]
-        if not lines:
+        if not lines or index >= len(lines):
             return {"error": "nothing pending"}
         rec = json.loads(lines[index])
         res = self._sh("solana", "transfer", rec["recipient"],
@@ -146,6 +146,9 @@ class AgentTreasury:
                        "--allow-unfunded-recipient")
         rec["human_approved"] = True
         rec["status"] = "executed" if res.returncode == 0 else "failed"
+        # remove the approved entry from the pending file
+        remaining = [l for i, l in enumerate(lines) if i != index]
+        self.pending.write_text("\n".join(remaining) + ("\n" if remaining else ""))
         self._log(self.ledger, **rec)
         return rec
 
